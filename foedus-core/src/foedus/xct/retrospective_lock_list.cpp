@@ -294,6 +294,10 @@ void RetrospectiveLockList::construct(thread::Thread* context, uint32_t read_loc
       kNoLock);
   }
 
+  if (last_active_entry_ == kLockListPositionInvalid) {
+    return;
+  }
+
   // Now, the entries are not sorted and we might have duplicates.
   // Sort them, and merge entries for the same record.
   // std::set? no joke. we can't afford heap allocation here.

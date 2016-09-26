@@ -587,8 +587,8 @@ inline ErrorCode CurrentLockList::try_or_acquire_single_lock(
     // We can release any lock anytime.. great flexibility!
     mcs_rw_impl->release_rw_reader(lock_addr, lock_entry->mcs_block_);
     lock_entry->taken_mode_ = kNoLock;
-    last_locked_entry_ = calculate_last_locked_entry_from(pos - 1U);
-    assert_last_locked_entry();
+    lock_entry->mcs_block_ = 0;
+    last_locked_entry_ = calculate_last_locked_entry();
   } else {
     // This method is for unconditional acquire and try, not aync/retry.
     // If we have a queue node already, something was misused.
