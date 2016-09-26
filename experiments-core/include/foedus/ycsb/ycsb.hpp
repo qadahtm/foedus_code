@@ -210,6 +210,7 @@ struct YcsbWorkload {
       scan_percent_(scan_percent),
       rmw_percent_(rmw_percent),
       rmw_additional_reads_(0),
+      rmw_read_ratio_(0.),
       reps_per_tx_(1),
       distinct_keys_(true),
       extra_table_size_(0),
@@ -240,6 +241,7 @@ struct YcsbWorkload {
   int16_t scan_percent_;
   int16_t rmw_percent_;
   int32_t rmw_additional_reads_;
+  double rmw_read_ratio_;
   int32_t reps_per_tx_;
   bool distinct_keys_;
   int32_t extra_table_size_;
@@ -352,8 +354,10 @@ class YcsbClientTask {
       local_key_counter_(inputs.local_key_counter_),
       zipfian_theta_(inputs.zipfian_theta_),
       rnd_record_select_(4584287 + inputs.worker_id_),
-      rnd_record_select_zipf_(initial_table_size_, zipfian_theta_, 4584287 + 101 + inputs.worker_id_),
-      rnd_record_select_zipf_extra_(extra_table_size_, zipfian_theta_, 4584287 + 10101 + inputs.worker_id_),
+      rnd_record_select_zipf_(initial_table_size_, zipfian_theta_,
+              4584287 + 1010 + inputs.worker_id_),
+      rnd_record_select_zipf_extra_(extra_table_size_, zipfian_theta_,
+              4584287 + 10101 + inputs.worker_id_),
       rnd_field_select_(37 + inputs.worker_id_),
       rnd_scan_length_select_(47920 + inputs.worker_id_),
       rnd_xct_select_(882746 + inputs.worker_id_) {}

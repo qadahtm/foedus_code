@@ -100,6 +100,7 @@ DEFINE_bool(verify_loaded_data, true, "Whether to verify key length and value af
 DEFINE_double(zipfian_theta, 0, "The theta value in Zipfian distribution, 0 < theta < 1."
   " Larger = more sckewed.");
 DEFINE_int32(rmw_additional_reads, 10, "The number of reads in an RMW transaction.");
+DEFINE_double(rmw_read_ratio, 0.0, "The fraction of reads in an RMW transaction for RMW ops.");
 DEFINE_int32(reps_per_tx, 0, "The number of operations to repeat in each transaction."
   " For instance, setting this to 10 and running workload F means 'do 10 RMWs in each tx'."
   " Records are choosen by the corresponding RNG used by the transaction.");
@@ -408,6 +409,7 @@ ErrorStack YcsbDriver::run() {
   } else if (FLAGS_workload == "F") {
     workload = YcsbWorkloadF;
     workload.rmw_additional_reads_ = FLAGS_rmw_additional_reads;
+    workload.rmw_read_ratio_ = FLAGS_rmw_read_ratio;
     workload.extra_table_rmws_ = FLAGS_extra_table_rmws;
     workload.extra_table_reads_ = FLAGS_extra_table_reads;
   } else if (FLAGS_workload == "G") {
@@ -430,6 +432,7 @@ ErrorStack YcsbDriver::run() {
     << " scan: " << workload.scan_percent() << "%"
     << " rmw: " << workload.rmw_percent() << "%"
     << " rmw additional reads: " << workload.rmw_additional_reads_
+    << " rmw read ratio: " << workload.rmw_read_ratio_
     << " operations per transaction: " << workload.reps_per_tx_
     << " use distinct keys: " << workload.distinct_keys_
     << " extra table size: " << workload.extra_table_size_

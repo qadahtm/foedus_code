@@ -270,10 +270,25 @@ ErrorStack YcsbClientTask::run(thread::Thread* context) {
             }
           }
 
-          for (int32_t i = 0; i < workload_.reps_per_tx_; ++i) {
-            ret = do_rmw(&user_table_, user_keys[i]);
-            if (ret != kErrorCodeOk) {
-              goto finish;
+          if (workload_.rmw_read_ratio_ == 0.) {
+            for (int32_t i = 0; i < workload_.reps_per_tx_; ++i) {
+              ret = do_rmw(&user_table_, user_keys[i]);
+              if (ret != kErrorCodeOk) {
+                goto finish;
+              }
+            }
+          } else {
+            const uint32_t threshold = static_cast<uint32_t>(workload_.rmw_read_ratio_
+                    * static_cast<double>(static_cast<uint32_t>(-1)));
+            for (int32_t i = 0; i < workload_.reps_per_tx_; ++i) {
+              uint32_t op_type = rnd_xct_select_.uniform_within(0, static_cast<uint32_t>(-1));
+              if (op_type < threshold)
+                ret = do_read(&user_table_, user_keys[i]);
+              else
+                ret = do_rmw(&user_table_, user_keys[i]);
+              if (ret != kErrorCodeOk) {
+                goto finish;
+              }
             }
           }
 
