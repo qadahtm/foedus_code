@@ -279,9 +279,9 @@ ErrorStack YcsbClientTask::run(thread::Thread* context) {
             }
           } else {
             const uint32_t threshold = static_cast<uint32_t>(workload_.rmw_read_ratio_
-                    * static_cast<double>(static_cast<uint32_t>(-1)));
+                    * 1000000.);
             for (int32_t i = 0; i < workload_.reps_per_tx_; ++i) {
-              uint32_t op_type = rnd_xct_select_.uniform_within(0, static_cast<uint32_t>(-1));
+              uint32_t op_type = rnd_xct_select_.uniform_within(0, 1000000 - 1);
               if (op_type < threshold)
                 ret = do_read(&user_table_, user_keys[i]);
               else
