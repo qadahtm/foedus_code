@@ -343,7 +343,7 @@ int driver_main(int argc, char **argv) {
   const float partitioner_required_mb_ = FLAGS_initial_table_size * 0.15 / 1000000;
   if (options.storage_.partitioner_data_memory_mb_ < partitioner_required_mb_) {
     std::cout << "Set partitioner_data_memory_mb_ to " << partitioner_required_mb_ << std::endl;
-    options.storage_.partitioner_data_memory_mb_ = partitioner_required_mb_;
+    options.storage_.partitioner_data_memory_mb_ = ceil(partitioner_required_mb_);
   }
 #endif
 
