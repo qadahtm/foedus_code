@@ -33,6 +33,7 @@
 #include "foedus/assorted/assorted_func.hpp"
 #include "foedus/assorted/cacheline.hpp"
 #include "foedus/assorted/endianness.hpp"
+#include "foedus/assorted/zipfian_random.hpp"
 #include "foedus/proc/proc_manager.hpp"
 #include "foedus/soc/shared_memory_repo.hpp"
 #include "foedus/soc/shared_rendezvous.hpp"
@@ -351,6 +352,8 @@ class YcsbClientTask {
       local_key_counter_(inputs.local_key_counter_),
       zipfian_theta_(inputs.zipfian_theta_),
       rnd_record_select_(4584287 + inputs.worker_id_),
+      rnd_record_select_zipf_(initial_table_size_, zipfian_theta_, 4584287 + 101 + inputs.worker_id_),
+      rnd_record_select_zipf_extra_(extra_table_size_, zipfian_theta_, 4584287 + 10101 + inputs.worker_id_),
       rnd_field_select_(37 + inputs.worker_id_),
       rnd_scan_length_select_(47920 + inputs.worker_id_),
       rnd_xct_select_(882746 + inputs.worker_id_) {}
@@ -403,6 +406,8 @@ class YcsbClientTask {
   // zipfian fast. RMW workload (aka YCSB-F here) doesn't grow the database
   // so we can use zipfian for it.
   assorted::UniformRandom rnd_record_select_;
+  assorted::ZipfianRandom rnd_record_select_zipf_;
+  assorted::ZipfianRandom rnd_record_select_zipf_extra_;
   assorted::UniformRandom rnd_field_select_;
   assorted::UniformRandom rnd_scan_length_select_;
   assorted::UniformRandom rnd_xct_select_;
@@ -424,7 +429,8 @@ class YcsbClientTask {
   }
 
   YcsbKey& build_rmw_key() {
-    auto key_seq = rnd_record_select_.uniform_within(0, initial_table_size_ - 1);
+    // auto key_seq = rnd_record_select_.uniform_within(0, initial_table_size_ - 1);
+    auto key_seq = rnd_record_select_zipf_.next();
     auto cnt = local_key_counter_->user_key_counter_;
     if (cnt == 0) {
       // Unbalanced load, see the only loader's counter
@@ -437,7 +443,8 @@ class YcsbClientTask {
   }
 
   YcsbKey& build_extra_key() {
-    auto key_seq = rnd_record_select_.uniform_within(0, extra_table_size_ - 1);
+    // auto key_seq = rnd_record_select_.uniform_within(0, extra_table_size_ - 1);
+    auto key_seq = rnd_record_select_zipf_extra_.next();
     auto cnt = local_key_counter_->extra_key_counter_;
     if (cnt == 0) {
       // Unbalanced load, see the only loader's counter
