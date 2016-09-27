@@ -107,6 +107,24 @@ ErrorStack YcsbClientTask::run(thread::Thread* context) {
   user_keys.reserve(conservative_size);
   extra_keys.reserve(conservative_size);
 
+  // Generate all keys
+  std::vector<YcsbKey> all_keys;
+  all_keys.reserve(workload_.ops_per_worker_ * (workload_.reps_per_tx_ +
+                                                workload_.rmw_additional_reads_));
+  for (uint32_t t = 0; t < workload_.ops_per_worker_; t++) {
+    for (int32_t i = 0; i < workload_.reps_per_tx_ + workload_.rmw_additional_reads_; i++) {
+      YcsbKey k = build_rmw_key();
+      if (workload_.distinct_keys_) {
+        while (std::find(user_keys.begin(), user_keys.end(), k) != user_keys.end()) {
+          k = build_rmw_key();
+        }
+      }
+      all_keys.push_back(k);
+    }
+  }
+  size_t last_off = 0;
+  LOG(INFO) << "YCSB Client-" << worker_id_ << " finished generating keys";
+
   // Wait for the driver's order
   channel_->exit_nodes_--;
   ASSERT_ND(channel_->exit_nodes_ <= total_thread_count);
@@ -160,14 +178,16 @@ ErrorStack YcsbClientTask::run(thread::Thread* context) {
     // Get x different keys first
     if (user_keys.size() == 0) {
       for (int32_t i = 0; i < workload_.reps_per_tx_ + workload_.rmw_additional_reads_; i++) {
-        YcsbKey k = build_rmw_key();
-        if (workload_.distinct_keys_) {
-          while (std::find(user_keys.begin(), user_keys.end(), k) != user_keys.end()) {
-            k = build_rmw_key();
-          }
-        }
+        // YcsbKey k = build_rmw_key();
+        // if (workload_.distinct_keys_) {
+        //   while (std::find(user_keys.begin(), user_keys.end(), k) != user_keys.end()) {
+        //     k = build_rmw_key();
+        //   }
+        // }
+        YcsbKey& k = all_keys[last_off + i];
         user_keys.push_back(k);
       }
+      last_off += workload_.reps_per_tx_ + workload_.rmw_additional_reads_;
 
       if (sort_keys_) {
         std::sort(user_keys.begin(), user_keys.end());
@@ -368,6 +388,9 @@ ErrorStack YcsbClientTask::run(thread::Thread* context) {
       outputs_->snapshot_cache_hits_ = context->get_snapshot_cache_hits();
       outputs_->snapshot_cache_misses_ = context->get_snapshot_cache_misses();
     }
+
+    if (last_off >= all_keys.size())
+      channel_->stop_flag_.store(true);
   }
   outputs_->snapshot_cache_hits_ = context->get_snapshot_cache_hits();
   outputs_->snapshot_cache_misses_ = context->get_snapshot_cache_misses();

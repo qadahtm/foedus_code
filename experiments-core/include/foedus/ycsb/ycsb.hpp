@@ -215,7 +215,8 @@ struct YcsbWorkload {
       distinct_keys_(true),
       extra_table_size_(0),
       extra_table_rmws_(0),
-      extra_table_reads_(0) {}
+      extra_table_reads_(0),
+      ops_per_worker_(0) {}
 
   YcsbWorkload() {}
   int16_t insert_percent() const { return insert_percent_; }
@@ -247,6 +248,7 @@ struct YcsbWorkload {
   int32_t extra_table_size_;
   int32_t extra_table_rmws_;
   int32_t extra_table_reads_;
+  uint64_t ops_per_worker_;
 };
 
 class YcsbLoadTask {

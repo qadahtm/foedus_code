@@ -82,6 +82,7 @@ DEFINE_int32(log_buffer_mb, 256, "Size in MB of log buffer for each thread");
 DEFINE_int32(log_file_size_gb, 16, "File size in GB of each log file, or when to go to next file");
 DEFINE_bool(null_log_device, false, "Whether to disable log writing.");
 DEFINE_int64(duration_micro, 10000000, "Duration of benchmark in microseconds.");
+DEFINE_int64(ops_per_worker, 200000, "Operations (transactions) per worker.");
 DEFINE_int32(hot_threshold, -1, "Threshold to determine hot/cold pages,"
   " 0 (always hot, 2PL) - 256 (always cold, OCC).");
 DEFINE_int32(rll_relative_threshold, -1, "Relative threshold to determine hot/cold pages in RLL,"
@@ -424,6 +425,10 @@ ErrorStack YcsbDriver::run() {
   workload.reps_per_tx_ = FLAGS_reps_per_tx;
   workload.distinct_keys_ = FLAGS_distinct_keys;
 
+  workload.ops_per_worker_ = FLAGS_ops_per_worker;
+  if (workload.ops_per_worker_ == 0)
+    LOG(FATAL) << "ops_per_worker must be non-zero";
+
   LOG(INFO)
     << "Workload -"
     << " insert: " << workload.insert_percent() << "%"
@@ -438,7 +443,8 @@ ErrorStack YcsbDriver::run() {
     << " extra table size: " << workload.extra_table_size_
     << " extra table rmws: " << workload.extra_table_rmws_
     << " extra table reads: " << workload.extra_table_reads_
-    << " zipfian theta: " << FLAGS_zipfian_theta;
+    << " zipfian theta: " << FLAGS_zipfian_theta
+    << " ops per worker: " << FLAGS_ops_per_worker;
 
   // Create an empty table
   Epoch ep;
@@ -627,7 +633,13 @@ ErrorStack YcsbDriver::run() {
     // wake up for each second to show intermediate results.
     uint64_t remaining_duration = FLAGS_duration_micro - duration.peek_elapsed_ns() / 1000ULL;
     remaining_duration = std::min<uint64_t>(remaining_duration, sleep_interval_us);
-    std::this_thread::sleep_for(std::chrono::microseconds(remaining_duration));
+    // std::this_thread::sleep_for(std::chrono::microseconds(remaining_duration));
+    while (remaining_duration >= 10 && !channel->stop_flag_.load()) {
+      std::this_thread::sleep_for(std::chrono::microseconds(10));
+      remaining_duration -= 10;
+    }
+    if (channel->stop_flag_.load())
+      break;
 
     if (FLAGS_shifting_workload) {
       if (max_bucket >= kMaxOutputBuckets) {
