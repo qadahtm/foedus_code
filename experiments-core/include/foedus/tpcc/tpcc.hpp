@@ -32,6 +32,8 @@
 #include "foedus/tpcc/tpcc_scale.hpp"
 #include "foedus/tpcc/tpcc_schema.hpp"
 
+#define TPCC_INSERT_ROWS false
+
 namespace foedus {
 namespace tpcc {
 

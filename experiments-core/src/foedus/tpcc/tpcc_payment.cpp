@@ -147,7 +147,7 @@ ErrorCode TpccClientTask::do_payment(Wid c_wid) {
       0,
       sizeof(c_new_data)));
   }
-
+#if TPCC_INSERT_ROWS
   // INSERT INTO HISTORY
   HistoryData h_data;
   h_data.amount_ = amount;
@@ -169,7 +169,7 @@ ErrorCode TpccClientTask::do_payment(Wid c_wid) {
     std::memset(h_data.date_ + timestring_.size(), 0, sizeof(h_data.date_) - timestring_.size());
   }
   CHECK_ERROR_CODE(storages_.histories_.append_record(context_, &h_data, sizeof(h_data)));
-
+#endif
   DVLOG(2) << "Payment: wid=" << wid << ", did=" << static_cast<int>(did)
     << ", cid=" << cid << ", c_wid=" << c_wid << ", c_did=" << static_cast<int>(c_did)
     << ", time=" << timestring_.str();

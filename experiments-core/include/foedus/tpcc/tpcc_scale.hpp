@@ -68,10 +68,29 @@ const uint16_t kOlMax = kMaxOlCount + 1U;
 
 #ifndef OLAP_MODE  // see cmake script for tpcc_olap
 // See Sec 5.2.2 of the TPCC spec
-const uint8_t kXctNewOrderPercent = 45U;
-const uint8_t kXctPaymentPercent = 43U + kXctNewOrderPercent;
-const uint8_t kXctOrderStatusPercent = 4U + kXctPaymentPercent;
-const uint8_t kXctDelieveryPercent = 4U + kXctOrderStatusPercent;
+//const uint8_t kXctNewOrderPercent = 45U;
+//const uint8_t kXctPaymentPercent = 43U + kXctNewOrderPercent;
+//const uint8_t kXctOrderStatusPercent = 4U + kXctPaymentPercent;
+//const uint8_t kXctDelieveryPercent = 4U + kXctOrderStatusPercent;
+
+// TPC-C-NP 50% PAY_PERC
+//const uint8_t kXctNewOrderPercent = 50U;
+//const uint8_t kXctPaymentPercent = 50U + kXctNewOrderPercent;
+//const uint8_t kXctOrderStatusPercent = 0U + kXctPaymentPercent;
+//const uint8_t kXctDelieveryPercent = 0U + kXctOrderStatusPercent;
+
+// TPC-C-NP 100% PAY_PERC
+//const uint8_t kXctNewOrderPercent = 0U;
+//const uint8_t kXctPaymentPercent = 100U + kXctNewOrderPercent;
+//const uint8_t kXctOrderStatusPercent = 0U + kXctPaymentPercent;
+//const uint8_t kXctDelieveryPercent = 0U + kXctOrderStatusPercent;
+
+// TPC-C-NP 0% PAY_PERC
+const uint8_t kXctNewOrderPercent = 100U;
+const uint8_t kXctPaymentPercent = 0U + kXctNewOrderPercent;
+const uint8_t kXctOrderStatusPercent = 0U + kXctPaymentPercent;
+const uint8_t kXctDelieveryPercent = 0U + kXctOrderStatusPercent;
+
 #else  // OLAP_MODE
 const uint8_t kXctNewOrderPercent = 0U;
 const uint8_t kXctPaymentPercent = 0U + kXctNewOrderPercent;

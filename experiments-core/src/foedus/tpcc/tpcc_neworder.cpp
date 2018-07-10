@@ -103,7 +103,7 @@ ErrorCode TpccClientTask::do_neworder(Wid wid) {
     will_rollback,
     ol_cnt,
     &all_local_warehouse));
-
+#if TPCC_INSERT_ROWS
   // INSERT INTO ORDERS and NEW_ORDERS
   OrderData o_data;
   o_data.all_local_ = all_local_warehouse ? 1 : 0;
@@ -122,7 +122,7 @@ ErrorCode TpccClientTask::do_neworder(Wid wid) {
   CHECK_ALREADY_EXISTS(neworders.insert_record_normalized(context_, wdoid));
   Wdcoid wdcoid = combine_wdcoid(wdcid, oid);
   CHECK_ALREADY_EXISTS(orders_secondary.insert_record_normalized(context_, wdcoid));
-
+#endif
   // show output on console
   DVLOG(3) << "Neworder: : wid=" << wid << ", did=" << did << ", oid=" << oid
     << ", cid=" << cid << ", ol_cnt=" << ol_cnt << ", total=" << output_total_
@@ -237,7 +237,7 @@ ErrorCode TpccClientTask::do_neworder_create_orderlines(
       s_records[ol - 1],
       new_quantity,
       s_quantity_offset));
-
+#if TPCC_INSERT_ROWS
     OrderlineData ol_data;
     ol_data.amount_ = quantity * i_data->price_ * (1.0 + w_tax + d_tax) * (1.0 - c_discount);
     std::memcpy(ol_data.dist_info_, s_data->dist_data_[did], sizeof(ol_data.dist_info_));
@@ -251,15 +251,15 @@ ErrorCode TpccClientTask::do_neworder_create_orderlines(
       wdol,
       &ol_data,
       sizeof(ol_data)));
-
+    output_amounts_[ol - 1] = ol_data.amount_;
+    output_total_ += ol_data.amount_;
+#endif
     // output variables
     output_bg_[ol - 1] = as_int_aligned(i_data->data_) != kOriginalInt &&
       as_int_aligned(s_data->data_) != kOriginalInt ? 'B' : 'G';
     output_prices_[ol - 1] = i_data->price_;
     std::memcpy(output_item_names_[ol - 1], i_data->name_, sizeof(i_data->name_));
     output_quantities_[ol - 1] = quantity;
-    output_amounts_[ol - 1] = ol_data.amount_;
-    output_total_ += ol_data.amount_;
   }
   return kErrorCodeOk;
 }
